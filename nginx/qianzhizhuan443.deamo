@@ -1,0 +1,42 @@
+server {
+      listen      443;
+      server_name blog.zy1999.club;
+      client_header_buffer_size 1024k;
+      large_client_header_buffers 4 1024k;
+      client_max_body_size 16m;
+
+      ssl                  on;
+      ssl_certificate      /usr/local/nginx/conf/key/1_blog.zy1999.club_bundle.crt;
+      ssl_certificate_key  /usr/local/nginx/conf/key/2_blog.zy1999.club.key;
+      ssl_session_timeout  5m;
+      ssl_protocols  TLSv1 TLSv1.1 TLSv1.2;
+
+      #启用TLS1.1 TLS1.2要求OpenSSL1.0.1及以上版本 若OpenSSL版本低于要求 请使用ssl_protocols TLSv1;
+      ssl_ciphers  HIGH:!RC4:!MD5:!aNULL:!eNULL:!NULL:!DH:!EDH:!EXP:+MEDIUM;
+      ssl_prefer_server_ciphers   on;
+
+      location /{
+          proxy_pass       http://https_blog;
+          proxy_redirect   off;
+          proxy_set_header Host $http_host;
+          proxy_set_header X-Real-IP        $remote_addr;
+          proxy_set_header X-Forwarded-For  $proxy_add_x_forwarded_for;
+      }
+      access_log  /data/logs/nginx/access.log;
+      error_log  /data/logs/nginx/error.log;
+}
+server {
+      listen      80;
+      server_name blog.zy1999.club;
+      client_header_buffer_size 1024k;
+      large_client_header_buffers 4 1024k;
+      client_max_body_size 16m;
+
+      location /{
+		#重写方法实现301永久重定向跳转，本文使用html跳转
+        	rewrite ^(.*) https://blog.zy1999.club permanent;
+      }
+
+      access_log  /data/logs/nginx/access.log;
+      error_log  /data/logs/nginx/error.log;
+}
